@@ -5,7 +5,8 @@
             [ajax.core :refer [GET POST]]
             [clojure.string :as string]
             [guestbook.validation :refer [validate-message]]
-            [guestbook.websockets :as ws]))
+            [guestbook.websockets :as ws]
+            [mount.core :as mount]))
 ;; (-> (.getElementsByClassName js/document "content")
 ;;     first
 ;;     (.-innerHTML)
@@ -202,10 +203,11 @@
 ;;                                         (get-in % [:response :errors])])})
 ;;                    {:db (dissoc db :form/server-errors)}))
 
-(rf/reg-event-fx :message/send!
-                 (fn [{:keys [db]} [_ fields]]
-                   (ws/send-message! fields)
-                   {:db (dissoc db :form/server-errors)}))
+(rf/reg-event-fx
+ :message/send!
+ (fn [{:keys [db]} [_ fields]]
+   (ws/send! [:message/create! fields])
+   {:db (dissoc db :form/server-errors)}))
 
 (defn handle-response! [response]
   (if-let [errors (:errors response)]
@@ -291,14 +293,15 @@
     [errors-component :message]
     [:textarea.textarea
      {:name :message
-      :value @(rf/subscribe [:form/field :message]) :on-change #(rf/dispatch
-                                                                 [:form/set-field
-                                                                  :message
-                                                                  (.. % -target -value)])}]]
+      :value @(rf/subscribe [:form/field :message])
+      :on-change #(rf/dispatch
+                   [:form/set-field
+                    :message
+                    (.. % -target -value)])}]]
    [:input.button.is-primary
     {:type :submit
-     :disabled @(rf/subscribe [:form/validation-errors?]) :on-click #(rf/dispatch [:message/send!
-                                                                                   @(rf/subscribe [:form/fields])])
+     :disabled @(rf/subscribe [:form/validation-errors?])
+     :on-click #(rf/dispatch [:message/send! @(rf/subscribe [:form/fields])])
      :value "comment"}]])
 
 
@@ -398,9 +401,10 @@
   (.log js/console "Components Mounted!"))
 (defn init! []
   (.log js/console "Initializing App...")
+  (mount/start)
   (rf/dispatch [:app/initialize])
   ;; (get-messages)
-  (ws/connect! (str "ws://" (.-host js/location) "/ws") handle-response!)
+  ;; (ws/connect! (str "ws://" (.-host js/location) "/ws") handle-response!)
   (mount-components))
 (.log js/console "guestbook.core evaluated!")
 ;; (dom/render
