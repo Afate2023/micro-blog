@@ -19,6 +19,7 @@
                  [metosin/muuntaja "0.6.7"]
                  [metosin/reitit "0.5.10"]
                  [metosin/ring-http-response "0.9.1"]
+                 [metosin/ring-swagger-ui "2.2.10"]
                  [mount "0.1.16"]
                  [nrepl "0.8.3"]
                  [org.clojure/clojure "1.10.1"]
@@ -33,54 +34,67 @@
                  [selmer "1.12.31"]
                  [org.clojure/clojurescript "1.10.764" :scope "provided"]
                  [reagent "1.0.0"]
-                 [cljs-ajax "0.8.1"]]
+                 [cljs-ajax "0.8.1"]
+                 [re-frame "1.2.0"]
+                 [com.google.javascript/closure-compiler-unshaded "v20200830" :scope "provided"]
+                 [org.clojure/google-closure-library "0.0-20191016-6ae1f72f" :scope "provided"]
+                 [thheller/shadow-cljs "2.11.14" :scope "provided"]]
 
   :min-lein-version "2.0.0"
 
   :source-paths ["src/clj"
+                 "src/cljs"
                  "src/cljc"]
   :test-paths ["test/clj"]
-  :resource-paths ["resources"  "target/cljsbuild"]
+  :resource-paths ["resources"
+                   "target/cljsbuild"]
   :target-path "target/%s/"
   :main ^:skip-aot guestbook.core
 
-  :plugins [[lein-cljsbuild "1.1.8"]]
+  :plugins [;; [lein-cljsbuild "1.1.8"] 
+            ]
 
-  :cljsbuild
-  {:builds
-   {:app {:source-paths ["src/cljs" "src/cljc"]
-          :compiler {:output-to "target/cljsbuild/public/js/app.js"
-                     :output-dir "target/cljsbuild/public/js/out"
-                     :main "guestbook.core"
-                     :asset-path "/js/out"
-                     :optimizations :none
-                     :source-map true
-                     :pretty-print true}}}}
+  ;; :cljsbuild
+  ;; {:builds
+  ;;  {:app {:source-paths ["src/cljs" "src/cljc"]
+  ;;         :compiler {:output-to "target/cljsbuild/public/js/app.js"
+  ;;                    :output-dir "target/cljsbuild/public/js/out"
+  ;;                    :main "guestbook.core"
+  ;;                    :asset-path "/js/out"
+  ;;                    :optimizations :none
+  ;;                    :source-map true
+  ;;                    :pretty-print true}}}}
   :clean-targets
   ^{:protect false}
   [:target-path
-   [:cljsbuild :builds :app :compiler :output-dir]
-   [:cljsbuild :builds :app :compiler :output-to]]
+   "target/cljsbuild"
+   ".shadow-cljs"]
 
   :profiles
   {:uberjar {:omit-source true
              :aot :all
              :uberjar-name "guestbook.jar"
-             :source-paths ["env/prod/clj"]
-             :resource-paths ["env/prod/resources"]}
+             :source-paths ["env/prod/clj" "env/prod/cljc" "env/prod/cljs"]
+             :resource-paths ["env/prod/resources"]
+             :prep-tasks ["compile"
+                          ["run" "-m" "shadow.cljs.devtools.cli" "release" "app"]]}
 
    :dev           [:project/dev :profiles/dev]
    :test          [:project/dev :project/test :profiles/test]
 
    :project/dev  {:jvm-opts ["-Dconf=dev-config.edn"]
                   :dependencies [[pjstadig/humane-test-output "0.10.0"]
+
+                                 [day8.re-frame/re-frame-10x "1.2.2"]
+
                                  [prone "2020-01-17"]
                                  [ring/ring-devel "1.8.2"]
-                                 [ring/ring-mock "0.4.0"]]
+                                 [ring/ring-mock "0.4.0"]
+                                 [binaryage/devtools "1.0.2"]]
                   :plugins      [[com.jakemccrary/lein-test-refresh "0.24.1"]
                                  [jonase/eastwood "0.3.5"]]
 
-                  :source-paths ["env/dev/clj"]
+                  :source-paths ["env/dev/clj" "env/dev/cljc" "env/dev/cljs"]
                   :resource-paths ["env/dev/resources"]
                   :repl-options {:init-ns user
                                  :timeout 120000}

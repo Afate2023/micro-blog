@@ -1,6 +1,7 @@
 (ns guestbook.routes.home
   (:require
    [guestbook.layout :as layout]
+   [guestbook.messages :as msg]
    [guestbook.db.core :as db]
    [clojure.java.io :as io]
    [guestbook.middleware :as middleware]
@@ -14,16 +15,16 @@
 ;; (defn home-page [request]
 ;;   (layout/render
 ;;    request "home.html" {:messages (db/get-messages)}))
-(defn home-page [{:keys [flash] :as request}]
-  (layout/render
-   request
-   "home.html"
-   (merge {:messages (db/get-messages)}
-          (select-keys flash [:name :message :errors]))))
+;; (defn home-page [{:keys [flash] :as request}]
+;;   (layout/render
+;;    request
+;;    "home.html"
+;;    (merge {:messages (db/get-messages)}
+;;           (select-keys flash [:name :message :errors]))))
 
-;; (defn home-page [request]
-;;   (layout/render request
-;;                  "home.html"))
+(defn home-page [request]
+  (layout/render request
+                 "home.html"))
 
 ;; (def message-schema
 ;;   [[:name
@@ -46,23 +47,38 @@
 ;;     (do 
 ;;       (db/save-message! params)
 ;;       (response/found "/"))))
-(defn save-message! [{:keys [params]}]
-  (if-let [errors (validate-message params)]
-    (response/bad-request {:errors errors})
-    (try
-      (db/save-message! params)
-      (response/ok {:status :ok})
-      (catch Exception e
-        (response/internal-server-error
-         {:errors {:server-error ["Failed to save message!"]}})))))
+;; (defn save-message! [{:keys [params]}]
+;;   (if-let [errors (validate-message params)]
+;;     (response/bad-request {:errors errors})
+;;     (try
+;;       (db/save-message! params)
+;;       (response/ok {:status :ok})
+;;       (catch Exception e
+;;         (response/internal-server-error
+;;          {:errors {:server-error ["Failed to save message!"]}})))))
+;; (defn save-message! [{:keys [params]}]
+;;   (try
+;;     (msg/save-message! params)
+;;     (response/ok {:status :ok})
+;;     (catch Exception e
+;;       (let [{id	:guestbook/error-id errors :errors} (ex-data e)]
+;;         (case id
+;;           :validation
+;;           (response/bad-request {:errors errors})
+;;           ;;else
+;;           (response/internal-server-error
+;;            {:errors {:server-error ["Failed to save message!"]}})))))) ;;...
+
+
 ;; (defn save-message! [{:keys [params]}]
 ;;   (db/save-message! params)
 ;;   (response/found "/"))
 
 (defn about-page [request]
   (layout/render request "about.html"))
-(defn message-list [_]
-  (response/ok {:messages (vec (db/get-messages))}))
+;; (defn message-list [_]
+;;   ;; (response/ok {:messages (vec (db/get-messages))})
+;;   (response/ok (msg/message-list)))
 
 (defn home-routes []
   [""
@@ -70,5 +86,6 @@
                  middleware/wrap-formats]}
    ["/" {:get home-page}]
    ["/about" {:get about-page}]
-   ["/message" {:post save-message!}]
-   ["/messages" {:get message-list}]])
+  ;;  ["/message" {:post save-message!}]
+  ;;  ["/messages" {:get message-list}]
+   ])
