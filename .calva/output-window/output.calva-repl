@@ -10,7 +10,7 @@
 ;   - See https://calva.io/connect-sequences/
 ; 
 ; Starting Jack-in Terminal: lein update-in :dependencies conj '[nrepl,"1.0.0"]' -- update-in :plugins conj '[cider/cider-nrepl,"0.28.5"]' -- update-in '[:repl-options,:nrepl-middleware]' conj '["cider.nrepl/cider-middleware"]' -- with-profile +dev repl :headless
-; Using host:port 127.0.0.1:35985 ...
+; Using host:port 127.0.0.1:42391 ...
 ; Hooking up nREPL sessions ...
 ; Connected session: clj
 ; TIPS:
@@ -21,56 +21,29 @@
 ;      when the cursor is after the last contents at the prompt
 ;   - Clojure lines in stack traces are peekable and clickable.
 ; Evaluating 'afterCLJReplJackInCode'
-{:started
- ["#'guestbook.config/env"
-  "#'guestbook.db.core/*db*"
-  "#'guestbook.handler/init-app"
-  "#'guestbook.handler/app-routes"
-  "#'guestbook.core/http-server"]}
+; Execution error (ConnectException) at sun.nio.ch.Net/pollConnect (Net.java:-2).
+; Connection refused
 clj꞉user꞉>  ; Use `alt+enter` to evaluate
 ; Jack-in done.
-clj꞉user꞉> 
-; nREPL Connection was closed
-; Jacking in...
-; Connecting using "Server only - guestbook" project type.
-; You can make Calva auto-select this.
-;   - See https://calva.io/connect-sequences/
-; 
-; Starting Jack-in Terminal: lein update-in :dependencies conj '[nrepl,"1.0.0"]' -- update-in :plugins conj '[cider/cider-nrepl,"0.28.5"]' -- update-in '[:repl-options,:nrepl-middleware]' conj '["cider.nrepl/cider-middleware"]' -- with-profile +dev repl :headless
-; Using host:port 127.0.0.1:43523 ...
-; Hooking up nREPL sessions ...
-; Connected session: clj
-; TIPS:
-;   - You can edit the contents here. Use it as a REPL if you like.
-;   - `alt+enter` evaluates the current top level form.
-;   - `ctrl+enter` evaluates the current form.
-;   - `alt+up` and `alt+down` traverse up and down the REPL command history
-;      when the cursor is after the last contents at the prompt
-;   - Clojure lines in stack traces are peekable and clickable.
-; Evaluating 'afterCLJReplJackInCode'
+clj꞉user꞉>  (start)
 {:started
- ["#'guestbook.config/env"
-  "#'guestbook.db.core/*db*"
+ ["#'guestbook.db.core/*db*"
+  "#'guestbook.routes.websockets/socket"
+  "#'guestbook.routes.websockets/channel-router"
   "#'guestbook.handler/init-app"
   "#'guestbook.handler/app-routes"
   "#'guestbook.core/http-server"]}
-clj꞉user꞉> 
-; Jack-in done.
+clj꞉user꞉>  (migrate)
+nil
 clj꞉user꞉> 
 ; nREPL Connection was closed
 ; Jacking in...
-; Connecting using "Server only - guestbook" project type.
+; Connecting using "Leiningen + shadow-cljs" project type.
 ; You can make Calva auto-select this.
 ;   - See https://calva.io/connect-sequences/
 ; 
-; Starting Jack-in Terminal: lein update-in :dependencies conj '[nrepl,"1.0.0"]' -- update-in :plugins conj '[cider/cider-nrepl,"0.28.5"]' -- update-in '[:repl-options,:nrepl-middleware]' conj '["cider.nrepl/cider-middleware"]' -- with-profile +dev repl :headless
-; Jacking in...
-; Connecting using "Server only - guestbook" project type.
-; You can make Calva auto-select this.
-;   - See https://calva.io/connect-sequences/
-; 
-; Starting Jack-in Terminal: lein update-in :dependencies conj '[nrepl,"1.0.0"]' -- update-in :plugins conj '[cider/cider-nrepl,"0.28.5"]' -- update-in '[:repl-options,:nrepl-middleware]' conj '["cider.nrepl/cider-middleware"]' -- with-profile +dev repl :headless
-; Using host:port 127.0.0.1:34549 ...
+; Starting Jack-in Terminal: lein update-in :dependencies conj '[nrepl,"1.0.0"]' -- update-in :dependencies conj '[cider/cider-nrepl,"0.28.5"]' -- update-in :plugins conj '[cider/cider-nrepl,"0.28.5"]' -- update-in '[:repl-options,:nrepl-middleware]' conj '["cider.nrepl/cider-middleware"]' -- update-in '[:repl-options,:nrepl-middleware]' conj '["shadow.cljs.devtools.server.nrepl/middleware"]' -- with-profile +dev repl :headless
+; Using host:port 127.0.0.1:41321 ...
 ; Hooking up nREPL sessions ...
 ; Connected session: clj
 ; TIPS:
@@ -80,7 +53,20 @@ clj꞉user꞉> 
 ;   - `alt+up` and `alt+down` traverse up and down the REPL command history
 ;      when the cursor is after the last contents at the prompt
 ;   - Clojure lines in stack traces are peekable and clickable.
-; Evaluating 'afterCLJReplJackInCode'
+clj꞉user꞉> 
+; Creating cljs repl session...
+; Connecting cljs repl: Leiningen + shadow-cljs...
+;   The Calva Connection Log might have more connection progress information.
+; Starting cljs repl for: Leiningen + shadow-cljs...
+; [:app] Configuring build.
+; [:app] Compiling ...
+; Cljs builds started
+; [:app] Build completed. (927 files, 0 compiled, 0 warnings, 3.88s)
+; Failed starting cljs repl for build: :app. Is the build running and connected?
+See the Output channel "Calva Connection Log" for any hints on what went wrong.
+clj꞉user꞉> 
+; Jack-in done.
+clj꞉user꞉>  (start)
 {:started
  ["#'guestbook.config/env"
   "#'guestbook.db.core/*db*"
@@ -90,7 +76,5 @@ clj꞉user꞉> 
   "#'guestbook.handler/app-routes"
   "#'guestbook.core/http-server"]}
 clj꞉user꞉> 
-; Jack-in done.
-clj꞉user꞉> 
-Sending message:  [:message/add {:name yrdydsaf, :message 123sdd2esfqaweqfadsw, :timestamp #inst "2023-03-14T08:50:15.470-00:00"}]
-Sending message:  [:message/add {:name yrdydsaf, :message 123sdd2esfqaweqfadsw, :timestamp #inst "2023-03-14T08:50:15.470-00:00"}]
+Sending message:  [:message/add nil]
+Sending message:  [:message/add nil]
