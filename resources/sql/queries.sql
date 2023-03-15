@@ -1,30 +1,17 @@
--- :name create-user! :! :n
--- :doc creates a new user record
-INSERT INTO users
-(id, first_name, last_name, email, pass)
-VALUES (:id, :first_name, :last_name, :email, :pass)
-
--- :name update-user! :! :n
--- :doc updates an existing user record
-UPDATE users
-SET first_name = :first_name, last_name = :last_name, email = :email
-WHERE id = :id
-
--- :name get-user :? :1
--- :doc retrieves a user record given the id
+-- :name create-user!* :! :n
+-- :doc creates a new user with the provided login and hashed password
+INSERT INTO users (login, password)
+VALUES (:login, :password)
+-- :name get-user-for-auth* :? :1
+-- :doc selects a user for authentication
 SELECT * FROM users
-WHERE id = :id
-
--- :name delete-user! :! :n
--- :doc deletes a user record given the id
-DELETE FROM users
-WHERE id = :id
+WHERE login = :login
 
 -- :name save-message! :! :n
 -- :doc creates a new message using the name and message keys
-INSERT INTO guestbook
+INSERT INTO posts
 (name, message)
 VALUES (:name, :message)
 -- :name get-messages :? :*
 -- :doc selects all available messages
-SELECT * from guestbook
+SELECT * from posts
