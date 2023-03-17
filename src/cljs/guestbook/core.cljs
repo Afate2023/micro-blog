@@ -131,9 +131,11 @@
       (rf/dispatch [:message/add response])
       (rf/dispatch [:form/clear-fields response]))))
 
-(defn errors-component [id]
+(defn errors-component [id & [message]]
   (when-let [error @(rf/subscribe [:form/error id])]
-    [:div.notification.is-danger (string/join error)]))
+    [:div.notification.is-danger (if message
+                                   message
+                                   (string/join error))]))
 
 (defn text-input [{val :value attrs :attrs
                    :keys [on-save]}]
@@ -162,7 +164,7 @@
 (defn message-form []
   [:div
    [errors-component :server-error]
-
+   [errors-component :unauthorized "Please log in before posting."]
    [:div.field
     [:label.label {:for :name} "Name"]
     [errors-component :name]
@@ -241,56 +243,6 @@
                              "Loading Messages"
                              "Refresh Messages")]))
 
-(defn home []
-  (let [messages (rf/subscribe [:messages/list])]
-    (fn []
-      [:div.content>div.columns.is-centered>div.column.is-two-thirds
-       (if @(rf/subscribe [:messages/loading?])
-         [:h3 "Loading Messages..."]
-         [:div
-          [:div.columns>div.column
-           [:h3 "Messages"]
-           [message-list messages]]
-          [:div.columns>div.column
-           [reload-messages-button]]
-          [:div.columns>div.column
-           [message-form]]])])))
-
-
-(rf/reg-event-db
- :app/show-modal
- (fn [db [_ modal-id]]
-   (assoc-in db [:app/active-modals modal-id] true)))
-(rf/reg-event-db
- :app/hide-modal
- (fn [db [_ modal-id]]
-   (update db :app/active-modals dissoc modal-id)))
-(rf/reg-sub
- :app/active-modals
- (fn [db _]
-   (:app/active-modals db {})))
-(rf/reg-sub :app/modal-showing?
-            :<- [:app/active-modals]
-            (fn [modals [_ modal-id]]
-              (get modals modal-id false)))
-(defn modal-card [id title body footer]
-  [:div.modal
-   {:class (when @(rf/subscribe [:app/modal-showing? id]) "is-active")}
-   [:div.modal-background
-    {:on-click #(rf/dispatch [:app/hide-modal id])}]
-   [:div.modal-card
-    [:header.modal-card-head
-     [:p.modal-card-title title]
-     [:button.delete
-      {:on-click #(rf/dispatch [:app/hide-modal id])}]]
-    [:section.modal-card-body body]
-    [:footer.modal-card-foot footer]]])
-(defn modal-button [id title body footer]
-  [:div
-   [:button.button.is-primary
-    {:on-click #(rf/dispatch [:app/show-modal id])} title]
-   [modal-card id title body footer]])
-
 ;;login
 (rf/reg-event-db
  :auth/handle-login
@@ -310,26 +262,25 @@
 
 
 (defn login-button []
-  (r/with-let
-    [fields (r/atom {})
-     error
-     (r/atom nil)
-     do-login
-     (fn [_]
-       (reset! error nil)
-       (POST "/api/login"
-         {:headers {"Accept" "application/transit+json"}
-          :params @fields
-          :handler (fn [response]
-                     (reset! fields {})
-                     (rf/dispatch [:auth/handle-login response])
-                     (rf/dispatch [:app/hide-modal :user/login]))
-          :error-handler (fn [error-response]
-                           (reset! error
-                                   (or
-                                    (:message (:response error-response))
-                                    (:status-text error-response)
-                                    "Unknown Error")))}))]
+  (r/with-let [fields (r/atom {})
+               error
+               (r/atom nil)
+               do-login
+               (fn [_]
+                 (reset! error nil)
+                 (POST "/api/login"
+                   {:headers {"Accept" "application/transit+json"}
+                    :params @fields
+                    :handler (fn [response]
+                               (reset! fields {})
+                               (rf/dispatch [:auth/handle-login response])
+                               (rf/dispatch [:app/hide-modal :user/login]))
+                    :error-handler (fn [error-response]
+                                     (reset! error
+                                             (or
+                                              (:message (:response error-response))
+                                              (:status-text error-response)
+                                              "Unknown Error")))}))]
     [modal-button :user/login
 ;; Title
      "Log In"
@@ -432,6 +383,73 @@
                      (string/blank? (:password @fields))
                      (string/blank? (:confirm @fields)))}
       "Create Account"]]))
+
+(defn home []
+  (let [messages (rf/subscribe [:messages/list])]
+    (fn []
+      [:div.content>div.columns.is-centered>div.column.is-two-thirds
+       (if @(rf/subscribe [:messages/loading?])
+         [:h3 "Loading Messages..."]
+         [:div
+          [:div.columns>div.column
+           [:h3 "Messages"]
+           [message-list messages]]
+          [:div.columns>div.column
+           [reload-messages-button]]
+          [:div.columns>div.column
+           (case @(rf/subscribe [:auth/user-state])
+             :loading
+             [:div {:style {:width "5em"}}
+              [:progress.progress.is-dark.is-small {:max 100} "30%"]]
+             :authenticated
+             [message-form]
+             :anonymous
+             [:div.notification.is-clearfix
+              [:span "Log in or create an account to post a message!"]
+              [:div.buttons.is-pulled-right
+               [login-button]
+               [register-button]]])]
+
+          ;; [:div.columns>div.column
+          ;;  [message-form]]
+          ])])))
+
+
+(rf/reg-event-db
+ :app/show-modal
+ (fn [db [_ modal-id]]
+   (assoc-in db [:app/active-modals modal-id] true)))
+(rf/reg-event-db
+ :app/hide-modal
+ (fn [db [_ modal-id]]
+   (update db :app/active-modals dissoc modal-id)))
+(rf/reg-sub
+ :app/active-modals
+ (fn [db _]
+   (:app/active-modals db {})))
+(rf/reg-sub :app/modal-showing?
+            :<- [:app/active-modals]
+            (fn [modals [_ modal-id]]
+              (get modals modal-id false)))
+(defn modal-card [id title body footer]
+  [:div.modal
+   {:class (when @(rf/subscribe [:app/modal-showing? id]) "is-active")}
+   [:div.modal-background
+    {:on-click #(rf/dispatch [:app/hide-modal id])}]
+   [:div.modal-card
+    [:header.modal-card-head
+     [:p.modal-card-title title]
+     [:button.delete
+      {:on-click #(rf/dispatch [:app/hide-modal id])}]]
+    [:section.modal-card-body body]
+    [:footer.modal-card-foot footer]]])
+(defn modal-button [id title body footer]
+  [:div
+   [:button.button.is-primary
+    {:on-click #(rf/dispatch [:app/show-modal id])} title]
+   [modal-card id title body footer]])
+
+
 
 
 (rf/reg-sub

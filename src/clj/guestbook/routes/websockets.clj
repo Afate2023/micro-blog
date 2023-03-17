@@ -1,48 +1,14 @@
 (ns guestbook.routes.websockets
-  (:require [clojure.tools.logging :as log]
-            ;; [org.httpkit.server :as http-kit]
-            ;; [clojure.edn :as edn]
-            [guestbook.messages :as msg]
-            [guestbook.session :as session]
-            [guestbook.middleware :as middleware]
-            [mount.core :refer [defstate]]
-            [taoensso.sente :as sente]
-            [taoensso.sente.server-adapters.http-kit :refer [get-sch-adapter]]))
-;; (defonce channels (atom #{}))
-;; (defn connect! [channel]
-;;   (log/info "Channel opened")
-;;   (swap! channels conj channel))
-;; (defn disconnect! [channel status]
-;;   (log/info "Channel closed: " status)
-;;   (swap! channels disj channel))
-
-
-;; (defn handle-message! [channel ws-message]
-;;   (let [message (edn/read-string ws-message)
-;;         response (try
-;;                    (msg/save-message! message)
-;;                    (assoc message :timestamp (java.util.Date.))
-;;                    (catch Exception e
-;;                      (let [{id :guestbook/error-id errors :errors} (ex-data e)]
-;;                        (case id
-;;                          :validation
-;;                          {:errors errors}
-;;                                                             ;;   else
-;;                          {:errors
-;;                           {:server-error ["Failed to save message!"]}}))))]
-;;     (if (:errors response)
-;;       (http-kit/send! channel (pr-str response))
-;;       (doseq [channel @channels]
-;;         (http-kit/send! channel (pr-str response))))))
-
-;; (defn handler [request]
-;;   (http-kit/with-channel request channel
-;;     (connect! channel)
-;;     (http-kit/on-close channel (partial disconnect! channel))
-;;     (http-kit/on-receive channel (partial handle-message! channel))))
-;; (defn websocket-routes []
-;;   ["/ws"
-;;    {:get handler}])
+  (:require
+   [clojure.tools.logging :as log]
+   [guestbook.messages :as msg]
+   [guestbook.session :as session]
+   [guestbook.middleware :as middleware]
+   [guestbook.auth :as auth]
+   [guestbook.auth.ws :refer [authorized?]]
+   [mount.core :refer [defstate]]
+   [taoensso.sente :as sente]
+   [taoensso.sente.server-adapters.http-kit :refer [get-sch-adapter]]))
 (defstate socket
   :start (sente/make-channel-socket!
           (get-sch-adapter)
@@ -81,14 +47,25 @@
         {:success true}))))
 (defn receive-message! [{:keys [id ?reply-fn ring-req]
                          :as message}]
-  (log/debug "Got message with id: " id)
-  (let [reply-fn (or ?reply-fn (fn [_]))
-        session (session/read-session ring-req)
-        response (-> message
-                     (assoc :session session)
-                     handle-message)]
-    (when response
-      (reply-fn response))))
+  (case id
+    :chsk/bad-package (log/debug "Bad Package:\n" message)
+    :chsk/bad-event	(log/debug "Bad Event: \n" message)
+    :chsk/uidport-open (log/trace (:event message))
+    :chsk/uidport-close (log/trace (:event message))
+    ;; :chsk/ws-ping	nil
+;; ELSE
+    (let [reply-fn (or ?reply-fn (fn [_]))
+          session (session/read-session ring-req)
+          message (-> message
+                      (assoc :session session))]
+      (log/debug "Got message with id: " id)
+      (if (authorized? auth/roles message)
+        (when-some [response (handle-message message)]
+          (reply-fn response))
+        (do
+          (log/info "Unauthorized message: " id)
+          (reply-fn {:message "You are not authorized to perform this action!"
+                     :errors {:unauthorized true}}))))))
 (defstate channel-router
   :start (sente/start-chsk-router!
           (:ch-recv socket)
