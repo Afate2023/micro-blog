@@ -3,7 +3,7 @@
    [reitit.ring.middleware.dev :as dev]
    [guestbook.middleware :as middleware]
    [guestbook.layout :refer [error-page]]
-   [guestbook.routes.home :refer [home-routes]]
+  ;;  [guestbook.routes.home :refer [home-routes]]
    [guestbook.routes.services :refer [service-routes]]
    [reitit.ring :as ring]
    [ring.middleware.content-type :refer [wrap-content-type]]
@@ -22,7 +22,7 @@
   :start
   (ring/ring-handler
    (ring/router
-    [(app-routes) (home-routes) (service-routes) (websocket-routes)]
+    [(app-routes) (service-routes) (websocket-routes)]
     ;; {:reitit.middleware/transform dev/print-request-diffs}
     )
    (ring/routes
