@@ -33,6 +33,9 @@
    :author/get #{:any}
    :account/set-profile! #{:authenticated}
 
+   :media/get #{:any}
+   :media/upload #{:authenticated}
+
    :auth/login #{:any}
    :auth/logout #{:any}
    :account/register #{:any}
