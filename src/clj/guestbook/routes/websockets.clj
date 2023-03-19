@@ -52,7 +52,7 @@
     :chsk/bad-event	(log/debug "Bad Event: \n" message)
     :chsk/uidport-open (log/trace (:event message))
     :chsk/uidport-close (log/trace (:event message))
-    ;; :chsk/ws-ping	nil
+    :chsk/ws-ping	nil
 ;; ELSE
     (let [reply-fn (or ?reply-fn (fn [_]))
           session (session/read-session ring-req)

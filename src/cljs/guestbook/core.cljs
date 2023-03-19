@@ -1,12 +1,16 @@
 (ns guestbook.core
-  (:require [reagent.core :as r]
-            [reagent.dom :as dom]
-            [re-frame.core :as rf]
-            [ajax.core :refer [GET POST]]
-            [clojure.string :as string]
-            [guestbook.validation :refer [validate-message]]
-            [guestbook.websockets :as ws]
-            [mount.core :as mount]))
+  (:require
+   [reagent.core :as r]
+   [reagent.dom :as dom]
+   [re-frame.core :as rf]
+   [ajax.core :refer [GET POST]]
+   [clojure.string :as string]
+   [guestbook.validation :refer [validate-message]]
+   [guestbook.websockets :as ws]
+   [mount.core :as mount]
+   [reitit.coercion.spec :as reitit-spec]
+   [reitit.frontend :as rtf]
+   [reitit.frontend.easy :as rtfe]))
 ;; (-> (.getElementsByClassName js/document "content")
 ;;     first
 ;;     (.-innerHTML)
@@ -243,6 +247,43 @@
                              "Loading Messages"
                              "Refresh Messages")]))
 
+
+(rf/reg-event-db
+ :app/show-modal
+ (fn [db [_ modal-id]]
+   (assoc-in db [:app/active-modals modal-id] true)))
+(rf/reg-event-db
+ :app/hide-modal
+ (fn [db [_ modal-id]]
+   (update db :app/active-modals dissoc modal-id)))
+(rf/reg-sub
+ :app/active-modals
+ (fn [db _]
+   (:app/active-modals db {})))
+(rf/reg-sub :app/modal-showing?
+            :<- [:app/active-modals]
+            (fn [modals [_ modal-id]]
+              (get modals modal-id false)))
+
+(defn modal-card [id title body footer]
+  [:div.modal
+   {:class (when @(rf/subscribe [:app/modal-showing? id]) "is-active")}
+   [:div.modal-background
+    {:on-click #(rf/dispatch [:app/hide-modal id])}]
+   [:div.modal-card
+    [:header.modal-card-head
+     [:p.modal-card-title title]
+     [:button.delete
+      {:on-click #(rf/dispatch [:app/hide-modal id])}]]
+    [:section.modal-card-body body]
+    [:footer.modal-card-foot footer]]])
+
+(defn modal-button [id title body footer]
+  [:div
+   [:button.button.is-primary
+    {:on-click #(rf/dispatch [:app/show-modal id])} title]
+   [modal-card id title body footer]])
+
 ;;login
 (rf/reg-event-db
  :auth/handle-login
@@ -256,9 +297,6 @@
  :auth/user
  (fn [db _]
    (:auth/user db)))
-
-
-
 
 
 (defn login-button []
@@ -408,46 +446,12 @@
               [:span "Log in or create an account to post a message!"]
               [:div.buttons.is-pulled-right
                [login-button]
-               [register-button]]])]
-
-          ;; [:div.columns>div.column
-          ;;  [message-form]]
-          ])])))
+               [register-button]]])]])])))
 
 
-(rf/reg-event-db
- :app/show-modal
- (fn [db [_ modal-id]]
-   (assoc-in db [:app/active-modals modal-id] true)))
-(rf/reg-event-db
- :app/hide-modal
- (fn [db [_ modal-id]]
-   (update db :app/active-modals dissoc modal-id)))
-(rf/reg-sub
- :app/active-modals
- (fn [db _]
-   (:app/active-modals db {})))
-(rf/reg-sub :app/modal-showing?
-            :<- [:app/active-modals]
-            (fn [modals [_ modal-id]]
-              (get modals modal-id false)))
-(defn modal-card [id title body footer]
-  [:div.modal
-   {:class (when @(rf/subscribe [:app/modal-showing? id]) "is-active")}
-   [:div.modal-background
-    {:on-click #(rf/dispatch [:app/hide-modal id])}]
-   [:div.modal-card
-    [:header.modal-card-head
-     [:p.modal-card-title title]
-     [:button.delete
-      {:on-click #(rf/dispatch [:app/hide-modal id])}]]
-    [:section.modal-card-body body]
-    [:footer.modal-card-foot footer]]])
-(defn modal-button [id title body footer]
-  [:div
-   [:button.button.is-primary
-    {:on-click #(rf/dispatch [:app/show-modal id])} title]
-   [modal-card id title body footer]])
+
+
+
 
 
 
@@ -500,26 +504,69 @@
               [login-button]
               [register-button]])]]]]])))
 
-
+(defn page [{{:keys [view name]} :data
+             path	:path}]
+  [:section.section>div.container
+   (if view
+     [view]
+     [:div "No view specified for route: " name " (" path ")"])])
 (defn app []
-  [:div.app
-   [navbar]
-   [:section.section
-    [:div.container
-     [home]]]])
+  (let [current-route @(rf/subscribe [:router/current-route])]
+    [:div.app
+     [navbar]
+     [page current-route]]))
+
+
+;; (defn app []
+;;   [:div.app
+;;    [navbar]
+;;    [:section.section
+;;     [:div.container
+;;      [home]]]])
 
 
 
+(def routes
+  ["/"
+   ["" {:name ::home
+        :view home}]])
+
+(def router
+  (rtf/router
+   routes
+   {:data {:coercion reitit-spec/coercion}}))
+(rf/reg-event-db
+ :router/navigated
+ (fn [db [_ new-match]]
+   (assoc db :router/current-route new-match)))
+
+(rf/reg-sub
+ :router/current-route
+ (fn [db]
+   (:router/current-route db)))
+(defn init-routes! []
+  (rtfe/start!
+   router
+   (fn [new-match]
+     (when new-match
+       (rf/dispatch [:router/navigated new-match])))
+   {:use-fragment false})) ;;...
 (defn ^:dev/after-load mount-components []
   (rf/clear-subscription-cache!)
   (.log js/console "Mounting Components...")
+  (init-routes!)
   (dom/render [#'app] (.getElementById js/document "content"))
   (.log js/console "Components Mounted!"))
+
 (defn init! []
   (.log js/console "Initializing App...")
   (mount/start)
   (rf/dispatch [:app/initialize])
   (mount-components))
 (.log js/console "guestbook.core evaluated!")
+
+
+
+
 
 

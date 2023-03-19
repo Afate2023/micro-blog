@@ -16,3 +16,8 @@ RETURNING *;
 -- :name get-messages :? :*
 -- :doc selects all available messages
 SELECT * from posts
+
+-- :name get-messages-by-author :? :*
+-- :doc selects all messages posted by a user
+SELECT * from posts
+WHERE author = :author
