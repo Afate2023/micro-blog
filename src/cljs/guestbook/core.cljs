@@ -7,6 +7,7 @@
    [reitit.coercion.spec :as reitit-spec]
    [reitit.frontend :as rtf]
    [reitit.frontend.easy :as rtfe]
+   [reitit.frontend.controllers :as rtfc]
 
    [clojure.string :as string]
 
@@ -27,9 +28,8 @@
 (rf/reg-event-fx
  :app/initialize
  (fn [_ _]
-   {:db {:messages/loading? true
-         :session/loading? true}
-    :dispatch-n [[:session/load] [:messages/load]]}))
+   {:db {:session/loading? true}
+    :dispatch-n [[:session/load]]}))
 
 (def router
   (rtf/router
@@ -51,7 +51,12 @@
    router
    (fn [new-match]
      (when new-match
-       (rf/dispatch [:router/navigated new-match])))
+       (let [{controllers :controllers}
+             @(rf/subscribe [:router/current-route])
+             new-match-with-controllers (assoc new-match
+                                               :controllers
+                                               (rtfc/apply-controllers controllers new-match))]
+         (rf/dispatch [:router/navigated new-match-with-controllers]))))
    {:use-fragment false}))
 
 ;; (defn navbar []
@@ -85,9 +90,13 @@
         [:div#nav-menu.navbar-menu
          {:class (when @burger-active "is-active")}
          [:div.navbar-start
-          [:a.navbar-item
-           {:href "/"}
-           "Home"]]
+          [:a.navbar-item {:href "/"} "Home"]
+          (when (= @(rf/subscribe [:auth/user-state]) :authenticated)
+            [:a.navbar-item
+             {:href (rtfe/href :guestbook.routes.app/author
+                               {:user (:login @(rf/subscribe [:auth/user]))})}
+             "My Posts"])]
+
          [:div.navbar-end
           [:div.navbar-item
            (case @(rf/subscribe [:auth/user-state])
@@ -125,7 +134,7 @@
 (defn init! []
   (.log js/console "Initializing App...")
   (mount/start)
-  (rf/dispatch [:app/initialize])
+  (rf/dispatch-sync [:app/initialize])
   (mount-components))
 (.log js/console "guestbook.core evaluated!")
 

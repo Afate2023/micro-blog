@@ -72,6 +72,7 @@
                       :timestamp inst?}]}}}
        :handler
        (fn [_]
+        ;;  (Thread/sleep 500)
          (response/ok (msg/message-list)))}}]
     ["/by/:author"
      {:get

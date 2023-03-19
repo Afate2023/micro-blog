@@ -8,10 +8,39 @@
 (rf/reg-event-fx
  :messages/load
  (fn [{:keys [db]} _]
-   {:db (assoc db :messages/loading? true)
+   {:db (assoc db
+               :messages/loading? true
+               :messages/list nil
+               :messages/filter nil)
     :ajax/get {:url "/api/messages"
                :success-path [:messages]
                :success-event [:messages/set]}}))
+(rf/reg-event-fx
+ :messages/load-by-author
+ (fn [{:keys [db]} [_ author]]
+   {:db (-> db
+            (assoc :messages/loading? true
+                   :messages/filter {:author author}
+                   :messages/list nil))
+    :ajax/get {:url (str "/api/messages/by/" author)
+               :success-path [:messages]
+               :success-event [:messages/set]}}))
+
+
+;; (rf/reg-event-fx
+;;  :messages/load
+;;  (fn [{:keys [db]} _]
+;;    {:db (assoc db :messages/loading? true)
+;;     :ajax/get {:url "/api/messages"
+;;                :success-path [:messages]
+;;                :success-event [:messages/set]}}))
+;; (rf/reg-event-fx
+;;  :messages/load-by-author
+;;  (fn [{:keys [db]} [_ author]]
+;;    {:db (assoc db :messages/loading? true)
+;;     :ajax/get {:url (str "/api/messages?author=" author)
+;;                :success-path [:messages]
+;;                :success-event [:messages/set]}}))
 (rf/reg-event-db
  :messages/set
  (fn [db [_ messages]]
@@ -25,6 +54,11 @@
  :messages/list
  (fn [db _]
    (:messages/list db [])))
+
+
+
+
+
 (defn reload-messages-button []  ;; Copied from guestbook.core...
   (let [loading? (rf/subscribe [:messages/loading?])]
     [:button.button.is-info.is-fullwidth
@@ -32,6 +66,14 @@
       :disabled @loading?} (if @loading?
                              "Loading Messages"
                              "Refresh Messages")]))
+(defn message-list-placeholder []
+  [:ul.messages
+   [:li
+    [:p "Loading Messages..."]
+    [:div {:style {:width "10em"}}
+     [:progress.progress.is-dark {:max 100} "30%"]]]])
+
+
 (defn message-list [messages] ;; Copied from guestbook.core...
   [:ul.messages
    (for [{:keys [timestamp message name author]} @messages]
@@ -46,10 +88,27 @@
          [:a {:href (str "/user/" author)} (str "@" author)]
          [:span.is-italic "account not found"])
        ">"]])])
+(defn add-message? [filter-map msg]
+  (every?
+   (fn [[k matcher]]
+     (let [v (get msg k)]
+       (cond
+         (set? matcher)
+         (matcher v)
+         (fn? matcher)
+         (matcher v)
+         :else
+         (= matcher v)))) filter-map))
 (rf/reg-event-db
  :message/add
  (fn [db [_ message]]
-   (update db :messages/list conj message)))
+   (if (add-message? (:messages/filter db) message) (update db :messages/list conj message) db)))
+
+
+;; (rf/reg-event-db
+;;  :message/add
+;;  (fn [db [_ message]]
+;;    (update db :messages/list conj message)))
 (rf/reg-event-db
  :form/set-field
  [(rf/path :form/fields)]
