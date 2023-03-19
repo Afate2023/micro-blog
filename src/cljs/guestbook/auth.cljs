@@ -3,6 +3,7 @@
    [clojure.string :as string]
    [reagent.core :as r]
    [re-frame.core :as rf]
+   [reitit.frontend.easy :as rtfe]
    [guestbook.modals :as m]
    [ajax.core :refer [POST]]))
 (rf/reg-event-fx
@@ -97,7 +98,9 @@
    {:on-click #(POST "/api/logout"
                  {:handler (fn [_] (rf/dispatch [:auth/handle-logout]))})} "Log Out"])
 (defn nameplate [{:keys [login]}]
-  [:button.button.is-primary login])
+  [:a.button.is-primary
+   {:href (rtfe/href :guestbook.routes.app/profile)}
+   login])
 
 (defn register-button [] ;; Copied from guestbook.core...
   (r/with-let
