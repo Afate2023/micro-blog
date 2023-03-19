@@ -47,7 +47,7 @@
       ;; Add the author (e.g. <@username>)
        " <"
        (if author
-         (str "@" author)
+         [:a {:href (str "/user/" author)} (str "@" author)]
          [:span.is-italic "account not found"])
        ">"]])])
 
@@ -524,12 +524,24 @@
 ;;     [:div.container
 ;;      [home]]]])
 
-
-
+(defn author []
+  [:div
+   [:p "This page hasn't been implemented yet!"]
+   [:a {:href "/"} "Return home"]])
 (def routes
   ["/"
-   ["" {:name ::home
-        :view home}]])
+   [""
+    {:name ::home
+     :view home}]
+   ["user/:user"
+    {:name ::author
+     :view author}]])
+
+
+;; (def routes
+;;   ["/"
+;;    ["" {:name ::home
+;;         :view home}]])
 
 (def router
   (rtf/router
@@ -551,6 +563,8 @@
      (when new-match
        (rf/dispatch [:router/navigated new-match])))
    {:use-fragment false})) ;;...
+
+
 (defn ^:dev/after-load mount-components []
   (rf/clear-subscription-cache!)
   (.log js/console "Mounting Components...")

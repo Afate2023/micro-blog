@@ -11,17 +11,18 @@
   ;;  [reitit.ring.middleware.dev :as dev]
    [guestbook.env :refer [defaults]]
    [mount.core :as mount]
-   [guestbook.routes.websockets :refer [websocket-routes]]))
+   [guestbook.routes.websockets :refer [websocket-routes]]
+   [guestbook.routes.app :refer [app-routes]]))
 
 (mount/defstate init-app
   :start ((or (:init defaults) (fn [])))
   :stop  ((or (:stop defaults) (fn []))))
 
-(mount/defstate app-routes
+(mount/defstate routes
   :start
   (ring/ring-handler
    (ring/router
-    [(home-routes) (service-routes) (websocket-routes)]
+    [(app-routes) (home-routes) (service-routes) (websocket-routes)]
     ;; {:reitit.middleware/transform dev/print-request-diffs}
     )
    (ring/routes
@@ -38,4 +39,4 @@
       (constantly (error-page {:status 406, :title "406 - Not acceptable"}))}))))
 
 (defn app []
-  (middleware/wrap-base #'app-routes))
+  (middleware/wrap-base #'routes))
