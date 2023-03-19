@@ -296,7 +296,31 @@
                (do
                  (log/error "Unsupported file type" content-type "for file" name)
                  (update acc :failed-uploads (fnil conj []) name))))
-           {:files-uploaded []} mp)))}}]]
+           {:files-uploaded []} mp)))}}]
+    ["/change-password"
+     {::auth/roles (auth/roles :account/set-profile!)
+      :post {:parameters {:body
+                          {:old-password	string? :new-password	string?
+                           :confirm-password string?}}
+             :handler
+             (fn [{{{:keys [old-password new-password confirm-password]} :body}
+                   :parameters
+                   {:keys [identity]}	:session}]
+               (if
+                (not= new-password confirm-password)
+                 (response/bad-request
+                  {:error :mismatch
+                   :message "Password and Confirm fields must match!"})
+                 (try
+                   (auth/change-password! (:login identity) old-password new-password)
+                   (response/ok {:success true})
+                   (catch clojure.lang.ExceptionInfo e
+                     (if (= (:guestbook/error-id (ex-data e))
+                            ::auth/authentication-failure)
+                       (response/unauthorized
+                        {:error :incorrect-password
+                         :message "Old Password is incorrect, please try again."})
+                       (throw e))))))}}]]
    ["/media/:name"
     {::auth/roles (auth/roles :media/get)
      :get {:parameters

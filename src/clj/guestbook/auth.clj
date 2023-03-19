@@ -17,6 +17,19 @@
     (when (hashers/check password hashed)
       (dissoc user :password))))
 
+(defn change-password! [login old-password new-password]
+  (jdbc/with-transaction [t-conn db/*db*]
+    (let [{hashed :password} (db/get-user-for-auth* t-conn {:login login})]
+      (if (hashers/check old-password hashed)
+        (db/set-password-for-user!*
+         t-conn
+         {:login login
+          :password (hashers/derive new-password)})
+        (throw (ex-info "Old password must match!"
+                        {:guestbook/error-id ::authentication-failure
+                         :error "Passwords do not match!"}))))))
+
+
 (defn identity->roles [identity]
 ;;   这段代码定义了一个函数 identity->roles，它接受一个参数 identity，用于将一个用户身份转换成一个角色集合。函数的实现逻辑如下：
 
