@@ -17,5 +17,5 @@ profiles.clj
 .shadow-cljs
 guestbook_dev.db.mv.db
 .calva/output-window/output.calva-repl
-.clj-kondo
-.lsp
+.clj-kondo/.cache
+.lsp/.cache
