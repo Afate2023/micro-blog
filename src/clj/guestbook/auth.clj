@@ -29,6 +29,15 @@
                         {:guestbook/error-id ::authentication-failure
                          :error "Passwords do not match!"}))))))
 
+(defn delete-account! [login password]
+  (jdbc/with-transaction [t-conn db/*db*]
+    (let [{hashed :password} (db/get-user-for-auth* t-conn {:login login})]
+      (if (hashers/check password hashed)
+        (db/delete-user!* t-conn {:login login})
+        (throw (ex-info "Password is incorrect!"
+                        {:guestbook/error-id ::authentication-failure
+                         :error "Password is incorrect!"}))))))
+
 
 (defn identity->roles [identity]
 ;;   这段代码定义了一个函数 identity->roles，它接受一个参数 identity，用于将一个用户身份转换成一个角色集合。函数的实现逻辑如下：

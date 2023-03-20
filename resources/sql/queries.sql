@@ -36,7 +36,7 @@ SELECT
 	p.author	as author,
     a.profile->>'avatar' as avatar
 from posts as p join users as a on a.login = p.author
-WHERE author = :author
+WHERE author = :author;
 
 -- :name set-profile-for-user* :<! :1
 -- :doc sets a profile map for the specified user
@@ -62,3 +62,6 @@ select * from media where name = :name;
 
 -- :name set-password-for-user!* :! :n
 UPDATE users SET password = :password where login = :login
+
+-- :name delete-user!* :! :n 
+DELETE FROM users where login = :login

@@ -320,7 +320,33 @@
                        (response/unauthorized
                         {:error :incorrect-password
                          :message "Old Password is incorrect, please try again."})
-                       (throw e))))))}}]]
+                       (throw e))))))}}]
+    ["/delete-account"
+     {::auth/roles (auth/roles :account/set-profile!)
+      :post
+      {:parameters {:body {:login string?
+                           :password string?}}
+       :handler
+       (fn [{{{:keys [login password]} :body} :parameters
+             {{user :login} :identity} :session
+             :as req}]
+         (if (not= login user)
+           (response/bad-request
+            {:message "Login must match the current user!"})
+           (try
+             (auth/delete-account! user password)
+             (-> (response/ok)
+                 (assoc :session
+                        (select-keys
+                         (:session req)
+                         [:ring.middleware.anti-forgery/anti-forgery-token])))
+             (catch clojure.lang.ExceptionInfo e
+               (if (= (:guestbook/error-id (ex-data e))
+                      ::auth/authentication-failure)
+                 (response/unauthorized
+                  {:error :incorrect-password
+                   :message "Password is incorrect, please try again!"})
+                 (throw e))))))}}]]
    ["/media/:name"
     {::auth/roles (auth/roles :media/get)
      :get {:parameters
