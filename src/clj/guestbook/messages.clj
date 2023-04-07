@@ -10,6 +10,8 @@
 ;;                     {:guestbook/error-id :validation
 ;;                      :errors errors}))
 ;;     (db/save-message! message)))
+(defn get-message [post-id]
+  (db/get-message {:id post-id}))
 
 (defn save-message! [{{:keys [display-name]}
                       :profile

@@ -49,7 +49,7 @@
     (some? identity)
     (conj :authenticated)))
 
-(def roles
+(def roles 
   {:message/create! #{:authenticated}
 
    :author/get #{:any}
@@ -63,4 +63,7 @@
    :account/register #{:any}
    :session/get #{:any}
    :messages/list #{:any}
-   :swagger/swagger #{:any}})
+   :swagger/swagger #{:any}
+   
+   :message/get #{:any}
+   })
