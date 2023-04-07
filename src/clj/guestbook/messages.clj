@@ -21,7 +21,11 @@
     (throw (ex-info "Message is invalid"
                     {:guestbook/error-id :validation
                      :errors errors}))
-    (db/save-message! (assoc message :author login :name (or display-name login)))))
+    (db/save-message!
+     (assoc
+      message :author
+      login :name
+      (or display-name login)))))
 
 (defn messages-by-author [author]
   {:messages (vec (db/get-messages-by-author {:author author}))})

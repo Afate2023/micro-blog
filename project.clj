@@ -11,6 +11,8 @@
                  [cprop "0.1.17"]
                  [expound "0.8.7"]
                  [funcool/struct "1.4.0"]
+                ;;  [funcool/struct "2.0.0-SNAPSHOT"]
+                ;;  [org.clojars.t_yano/strict "2.0.0"]
                  [luminus-http-kit "0.1.9"]
                  [luminus-migrations "0.7.1"]
                  [luminus-transit "0.1.2"]
@@ -42,7 +44,8 @@
                  [com.taoensso/sente "1.16.0"]
                  [org.postgresql/postgresql "42.2.18"]
                  [buddy "2.0.0"]
-                 [metosin/jsonista "0.3.7"]]
+                 [metosin/jsonista "0.3.7"]
+                 [markdown-clj "1.10.5"]]
 
   :min-lein-version "2.0.0"
 
