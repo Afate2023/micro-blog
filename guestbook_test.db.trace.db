@@ -1,3 +1,0 @@
-2023-02-27 16:51:02 jdbc[4]: exception
-org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "SCHEMA_MIGRATIONS" not found; SQL statement:
-SELECT 1 FROM schema_migrations [42102-200]
