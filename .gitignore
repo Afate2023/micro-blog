@@ -20,3 +20,7 @@ guestbook_dev.db.mv.db
 .clj-kondo/.cache
 .lsp/.cache
 sunny
+.calva/output-window/output.calva-repl
+guestbook_dev.db.mv.db
+package-lock.json
+/out
